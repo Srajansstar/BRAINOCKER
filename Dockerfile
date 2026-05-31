@@ -38,13 +38,11 @@ RUN wget -q -O matlab_runtime.zip "https://ssd.mathworks.com/supportfiles/downlo
     rm -rf /tmp/*
 
 # Descargar e instalar Brainstorm desde tu enlace de Google Drive
-# Usamos un script de cookies para evadir la pantalla de advertencia de archivos grandes de Google Drive
 RUN mkdir -p /opt/brainstorm /tmp/extracted && \
-    wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1_FhUKiMMUv_8kIMqVEaYtOSy7GawLd65' -O- | grep -o 'confirm=[^&]*' | cut -d= -f2 > /tmp/confirm.txt && \
-    wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(cat /tmp/confirm.txt)&id=1_FhUKiMMUv_8kIMqVEaYtOSy7GawLd65" -O /tmp/brainstorm.zip && \
+    wget --no-check-certificate "https://drive.usercontent.google.com/download?id=1_FhUKiMMUv_8kIMqVEaYtOSy7GawLd65&export=download&confirm=t" -O /tmp/brainstorm.zip && \
     unzip -q /tmp/brainstorm.zip -d /tmp/extracted && \
     if [ -d /tmp/extracted/brainstorm3 ]; then mv /tmp/extracted/brainstorm3/* /opt/brainstorm/; else mv /tmp/extracted/* /opt/brainstorm/; fi && \
-    rm -rf /tmp/cookies.txt /tmp/confirm.txt /tmp/brainstorm.zip /tmp/extracted
+    rm -rf /tmp/brainstorm.zip /tmp/extracted
 
 # Configurar variables de entorno con la ruta correcta de MATLAB Runtime
 ENV MATLABROOT=/opt/matlab_runtime/R2023a
