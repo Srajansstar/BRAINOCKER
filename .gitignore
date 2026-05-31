@@ -1,0 +1,6 @@
+# Local compiled Brainstorm folder (downloaded directly in Docker/Singularity now)
+brainstorm3/
+brainstorm3.zip
+
+# Singularity image outputs
+*.sif

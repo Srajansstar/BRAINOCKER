@@ -1,0 +1,77 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%post
+    # Prevent interactive prompts during package installation
+    export DEBIAN_FRONTEND=noninteractive
+
+    # Install critical dependencies
+    apt-get update && apt-get install -y \
+        wget \
+        unzip \
+        grep \
+        libxt6 \
+        libxmu6 \
+        libglu1-mesa \
+        libxrandr2 \
+        libxcursor1 \
+        libxi6 \
+        libglib2.0-0 \
+        libsm6 \
+        xvfb \
+        openjdk-11-jre-headless \
+        libxaw7 \
+        libxrender1 \
+        libxtst6 \
+        libxfixes3 \
+        libgtk2.0-0 \
+        libxext6 \
+        libxinerama1 \
+        libgl1-mesa-glx \
+        x11-apps && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+    # Download and install MATLAB Runtime R2023a (Update 8)
+    mkdir -p /tmp/mcr
+    cd /tmp/mcr
+    wget -q https://ssd.mathworks.com/supportfiles/downloads/R2023a/Release/8/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2023a_Update_8_glnxa64.zip
+    unzip -q MATLAB_Runtime_R2023a_Update_8_glnxa64.zip
+    ./install -mode silent -agreeToLicense yes -destinationFolder /opt/matlab_runtime/R2023a
+    cd /
+    rm -rf /tmp/mcr
+
+    # Download Brainstorm3 from Google Drive (cookie-bypass script for large files)
+    mkdir -p /opt/brainstorm /tmp/extracted
+    wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1_FhUKiMMUv_8kIMqVEaYtOSy7GawLd65' -O- | grep -o 'confirm=[^&]*' | cut -d= -f2 > /tmp/confirm.txt
+    wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(cat /tmp/confirm.txt)&id=1_FhUKiMMUv_8kIMqVEaYtOSy7GawLd65" -O /tmp/brainstorm.zip
+    unzip -q /tmp/brainstorm.zip -d /tmp/extracted
+    if [ -d /tmp/extracted/brainstorm3 ]; then mv /tmp/extracted/brainstorm3/* /opt/brainstorm/; else mv /tmp/extracted/* /opt/brainstorm/; fi
+    rm -rf /tmp/cookies.txt /tmp/confirm.txt /tmp/brainstorm.zip /tmp/extracted
+
+    # Make the launcher script executable
+    chmod +x /opt/brainstorm/bin/R2023a/brainstorm3.command
+
+    # Run ldconfig to configure dynamically linked library paths (essential for Singularity)
+    ldconfig
+
+    # Set wide permissions so non-root users running Singularity can access MATLAB Runtime and Brainstorm
+    chmod -R a+rX /opt/matlab_runtime
+    chmod -R a+rX /opt/brainstorm
+
+%environment
+    export MATLABROOT=/opt/matlab_runtime/R2023a
+    export MCR_ROOT=/opt/matlab_runtime/R2023a
+    export LD_LIBRARY_PATH=${MCR_ROOT}/runtime/glnxa64:${MCR_ROOT}/bin/glnxa64:${MCR_ROOT}/sys/os/glnxa64
+    export XAPPLRESDIR=${MCR_ROOT}/X11/app-defaults
+    # Inform Brainstorm launcher of the pre-set MCR path to avoid interactive prompt
+    export BRAIN_MCR_PATH=/opt/matlab_runtime/R2023a
+
+%runscript
+    # If arguments (like a script path) are provided, execute Brainstorm with those arguments.
+    # Otherwise, just start Brainstorm.
+    if [ $# -eq 0 ]; then
+        exec /opt/brainstorm/bin/R2023a/brainstorm3.command /opt/matlab_runtime/R2023a
+    else
+        exec /opt/brainstorm/bin/R2023a/brainstorm3.command /opt/matlab_runtime/R2023a "$@"
+    fi
