@@ -16,7 +16,7 @@ DataDir    = '/tmp/brainstorm_db/out_data';
 % % Path to the data
    
 % Load Brainlife configuration file: config.json
-config_data = jsondecode(fileread('/mnt/tfmufv2025/config.json'));
+config_data = jsondecode(fileread('config.json'));
 sFilesMEG = fullfile(config_data.fif);
  
 ProtocolName = 'Protocol01'; % Needs to be a valid folder name (no spaces, no weird characters, etc)

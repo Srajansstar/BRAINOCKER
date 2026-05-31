@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Run the MATLAB pipeline using Brainstorm and MATLAB Runtime
+/opt/brainstorm/bin/R2023a/brainstorm3.command /opt/matlab_runtime/R2023a ./PIPELINE_BRAINOCKER.m
