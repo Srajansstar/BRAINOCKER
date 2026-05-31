@@ -1,4 +1,15 @@
 #!/bin/bash
 
+# Create the output directory matching the Brainlife output key
+mkdir -p ./report
+
 # Run the MATLAB pipeline using Brainstorm and MATLAB Runtime
 /opt/brainstorm/bin/R2023a/brainstorm3.command /opt/matlab_runtime/R2023a ./PIPELINE_BRAINOCKER.m
+
+# Copy the exported HTML report from container's /tmp directory to Brainlife's output directory
+if [ -d "/tmp/brainstorm_db/out_dir" ] && [ "$(ls -A /tmp/brainstorm_db/out_dir)" ]; then
+    echo "Copying report files to ./report/ ..."
+    cp -r /tmp/brainstorm_db/out_dir/* ./report/
+else
+    echo "Warning: No report files found in /tmp/brainstorm_db/out_dir"
+fi
